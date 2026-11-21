@@ -36,6 +36,47 @@ body{background:var(--bg);color:var(--ink)}.topbar{background:#fff;border-bottom
 .map-fallback-notice a{color:#ffcf91;font-weight:800;text-decoration:underline}
 #map.map-fallback .map-fallback-notice span{position:static;display:block;background:none;color:#e5eefc;padding:0;border-radius:0;font-size:11px}
 .leg-colors-legend{display:flex;gap:7px 11px;align-items:center;flex-wrap:wrap;padding:10px 16px 12px;background:#f3f6fb;border-top:1px solid #c8d1df;color:#182c44;font-size:12px;font-weight:750}.leg-colors-legend strong{width:100%;font-size:12px}.leg-colors-legend span{display:inline-flex;align-items:center;gap:5px}.leg-colors-legend i{width:19px;height:6px;display:inline-block;border-radius:10px;border:1px solid #ffffff}.map-fullscreen .leg-colors-legend{flex-shrink:0}
+
+/* True map-only viewport mode: overlays are deliberately independent of page layout. */
+body.fullscreen-open{overflow:hidden!important;overscroll-behavior:none}
+.map-shell.map-fullscreen{
+ position:fixed!important;inset:0!important;top:0!important;left:0!important;
+ width:100vw!important;width:100dvw!important;height:100vh!important;height:100dvh!important;
+ max-height:none!important;max-width:none!important;min-height:0!important;
+ margin:0!important;padding:0!important;border:0!important;border-radius:0!important;
+ display:flex!important;flex-direction:column!important;overflow:hidden!important;
+ z-index:2147483000!important;background:#d9e7ee!important;
+}
+.map-shell.map-fullscreen .map-header{display:contents!important}
+.map-shell.map-fullscreen .map-header>div:first-child{display:none!important}
+.map-shell.map-fullscreen .map-actions{display:contents!important}
+.map-shell.map-fullscreen .map-actions>:not(#fullScreenBtn){display:none!important}
+.map-shell.map-fullscreen #fullScreenBtn{
+ display:flex!important;align-items:center;justify-content:center;gap:6px;
+ position:absolute!important;top:calc(env(safe-area-inset-top, 0px) + 16px)!important;
+ right:calc(env(safe-area-inset-right, 0px) + 16px)!important;
+ left:auto!important;bottom:auto!important;
+ width:auto!important;max-width:calc(100vw - 32px)!important;min-width:0!important;
+ min-height:44px!important;height:44px!important;flex:none!important;
+ padding:0 17px!important;margin:0!important;
+ font-size:14px!important;font-weight:800!important;white-space:nowrap!important;
+ color:#fff!important;background:#132e52!important;border:2px solid #fff!important;
+ border-radius:12px!important;box-shadow:0 4px 18px #0c1d3670!important;
+ pointer-events:auto!important;z-index:1200!important;
+}
+.map-shell.map-fullscreen #map,
+.map-shell.map-fullscreen #map.map-fallback{
+ position:relative!important;display:block!important;inset:auto!important;
+ flex:1 1 auto!important;width:100%!important;height:100%!important;
+ min-height:0!important;max-height:none!important;margin:0!important;
+ border:0!important;border-radius:0!important;overflow:hidden!important;
+}
+.map-shell.map-fullscreen .map-legend,
+.map-shell.map-fullscreen .leg-colors-legend,
+.map-shell.map-fullscreen .allroute-panel,
+.map-shell.map-fullscreen .route-note{display:none!important}
+.map-shell.map-fullscreen .leaflet-control-container{z-index:1100}
+
 </style>
 </head>
 <body>
@@ -86,7 +127,7 @@ function presentAllRoutes(){const panel=$('allRoutePanel'),opened=!panel.hidden;
  const mobile=/Android|iPhone|iPad|iPod/i.test(navigator.userAgent);const pts=[startPoint(),...activeIds().map(id=>byId[id]),END];const canSingle=pts.length-2<=(mobile?3:9);
  panel.innerHTML='<strong>Seçili '+n+' durağın tamamı · Google Haritalar</strong><p>'+(canSingle?'Tüm durakları tek Google Haritalar bağlantısında açabilirsin.':'Google Haritalar mobil cihazlarda ara durak sayısını sınırlar. Atlanan durak olmaması için tüm güzergâhı sıralı etaplara ayırdım. Her etap bitince sıradakini aç.')+'</p><div class="allroute-links">'+(canSingle?'<a href="'+segmentLink(pts)+'" target="_blank" rel="noopener">Tüm rotayı Google Haritalar’da aç ↗</a>':'')+segments.map((part,i)=>'<a href="'+segmentLink(part)+'" target="_blank" rel="noopener">'+(i+1)+'. etap · '+part[0].name+' → '+part[part.length-1].name+' ↗</a>').join('')+'</div>';
 }
-function toggleFullScreen(force){const shell=document.querySelector('.map-shell');const active=typeof force==='boolean'?force:!shell.classList.contains('map-fullscreen');shell.classList.toggle('map-fullscreen',active);document.body.classList.toggle('fullscreen-open',active);$('fullScreenBtn').setAttribute('aria-pressed',String(active));$('fullScreenBtn').textContent=active?'✕ Tam ekrandan çık':'⛶ Tam ekran';if(map){setTimeout(()=>{map.invalidateSize();focusMap()},120)}}
+function toggleFullScreen(force){const shell=document.querySelector('.map-shell');const active=typeof force==='boolean'?force:!shell.classList.contains('map-fullscreen');shell.classList.toggle('map-fullscreen',active);document.body.classList.toggle('fullscreen-open',active);$('fullScreenBtn').setAttribute('aria-pressed',String(active));$('fullScreenBtn').textContent=active?'✕ Haritayı kapat':'⛶ Tam ekran';if(map){requestAnimationFrame(()=>{map.invalidateSize();focusMap();setTimeout(()=>map&&map.invalidateSize(),250)})}}
 const LEG_COLORS=['#dc2626','#2563eb','#16a34a','#c2410c','#9333ea','#0891b2','#ca8a04','#db2777','#475569','#65a30d','#7c3aed','#b45309'];
 function legColor(i){return LEG_COLORS[i%LEG_COLORS.length]}
 function stopMarkerColor(p,i,len){if(i===0)return '#086b51';if(i===len-1)return '#6625a9';if(p.museum)return '#1455a0';if(/vadisi|vadi/i.test(p.name))return '#a52c57';return '#8a5112'}
